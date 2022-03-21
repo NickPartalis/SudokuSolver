@@ -20,11 +20,8 @@ def is_valid(board, num, row, col):
     return True
 
 
-def find_next_empty():
-    pass
-
 def solve(board):
-
+    """Solves a Sudoku puzzle, if possible. Returns True if successfully solved."""
     # Find the next empty spot
     for i in range(9):
         for j in range(9):
