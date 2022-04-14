@@ -1,5 +1,4 @@
 from pprint import pprint
-from solver import solve
 import requests
 from gui import SudokuUI
 
