@@ -21,7 +21,7 @@ def is_valid(board, num, row, col):
     return True
 
 
-def solve(board, puzzle):
+def solve(board, puzzle=None, display=False):
     """Solves a Sudoku puzzle, when possible. Returns True if successfully solved, False otherwise."""
     # Find the next empty spot
     for i in range(9):
@@ -29,14 +29,16 @@ def solve(board, puzzle):
             if board[i][j] == 0:
                 for guess in range(1, 10):
                     if is_valid(board, guess, row=i, col=j):
-                        puzzle.fill_cell(i, j, guess)
                         board[i][j] = guess
+                        if display:
+                            puzzle.fill_cell(i, j, guess)
                         # Recursion
-                        if solve(board, puzzle):
+                        if solve(board, puzzle, display):
                             return True
                     # Backtracking
                     board[i][j] = 0  # Runs if the next "step" has no valid answer
-                    puzzle.empty_cell(i, j)
+                    if display:
+                        puzzle.empty_cell(i, j)
                 return False
 
     return True  # Runs when there are no empty slots, so the puzzle is solved

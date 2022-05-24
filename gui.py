@@ -32,7 +32,7 @@ class SudokuUI:
                command=self.display_solver).grid(row=1, column=0, columnspan=3, pady=(5, 0), sticky="nsew")
         # self.solve_btn.pack(anchor="e", pady=(0, PADDING))
 
-        self.root.mainloop()
+        # self.root.mainloop()
 
     def create_board(self):
         # Create the board
@@ -61,9 +61,6 @@ class SudokuUI:
                     self.button_grid[row][col].config(text=self.board[row][col], command=None,
                                                       bg="#e6e6e6", activebackground="#e6e6e6")
 
-    def change_btn_color(self, row, col, color):
-        self.button_grid[row][col].config(bg=color)
-
     def fill_cell(self, row, col, number):
         self.button_grid[row][col].config(text=number, bg="gold")
         self.root.update()
@@ -78,18 +75,54 @@ class SudokuUI:
         self.root.update()
 
     def display_solver(self):
-        solve(self.board, self)
+        solve(self.board, self, display=True)
 
     def change_speed(self, num):
         global SPEED_MS
         SPEED_MS = num
 
-    # def draw_grid(self):
-    #     for i in range(10):
-    #         line_width = 2 if i % 3 == 0 else 1  # wider lines for borders and 3x3 boxes
-    #         self.canvas.create_line((MARGIN + i * BOX_SIZE, MARGIN),
-    #                                 (MARGIN + i * BOX_SIZE, MARGIN + BOARD_SIZE), width=line_width)
-    #     for i in range(10):
-    #         line_width = 2 if i % 3 == 0 else 1
-    #         self.canvas.create_line((MARGIN, MARGIN + i * BOX_SIZE),
-    #                                 (MARGIN + BOARD_SIZE, MARGIN + i * BOX_SIZE), width=line_width)
+
+class SudokuNoInputUI(SudokuUI):
+    def __init__(self, board):
+        super().__init__(board)
+
+        self.root.mainloop()
+
+
+class SudokuUserInputUI(SudokuUI):
+    def __init__(self):
+        board = [[0 for col in range(9)] for row in range(9)]
+        super().__init__(board)
+
+        self.tracked_button = None
+        for row in self.button_grid:
+            for btn in row:
+                btn.bind('<Button-1>', self.button_click)
+        self.root.bind_all("<Key>", self.key_press)
+
+        self.root.mainloop()
+
+    def key_press(self, event):
+        if self.tracked_button:
+            if event.char.isdigit() and event.char != "0":  # 1 - 9
+                key = int(event.char)
+                self.tracked_button.config(text=key)  # TODO bg="#e6e6e6"?
+            elif event.char == "0" or event.char == "":  # 0 or special characters (for deletion)
+                self.tracked_button.config(text="")
+            self.tracked_button.config(bg=CELL_COLOR)
+            self.tracked_button = None
+
+    def button_click(self, event):
+        btn = event.widget
+        if self.tracked_button:
+            self.tracked_button.config(bg=CELL_COLOR)
+        self.tracked_button = btn
+        btn.config(bg="yellow")
+
+    def display_solver(self):
+        if solve(self.board, self, display=False):  # if puzzle solvable, then display solution
+            solve(self.board, self, display=True)
+            print(self.board)
+            print("Done!")
+        else:
+            print("Puzzle not solvable.")

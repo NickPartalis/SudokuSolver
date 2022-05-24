@@ -1,7 +1,7 @@
 from pprint import pprint
 import requests
-from gui import SudokuUI
-
+from gui import SudokuNoInputUI, SudokuUserInputUI
+from solver import solve
 
 def generate_puzzle(difficulty):
     if difficulty not in ("easy", "medium", "hard"):
@@ -32,9 +32,13 @@ if __name__ == '__main__':
     #     [1, 0, 9,   0, 0, 0,   2, 0, 0]
     # ]
 
-    # pprint(example_board)
+    # pprint(board)
     # print("    ")
-    # print(solve(example_board))
-    # pprint(example_board)
+    # print(solve(board))
+    # pprint(board)
 
-    gui = SudokuUI(board)
+    mode = input("Choose mode 1 or 2: ")
+    if mode == "1":
+        gui = SudokuNoInputUI(board)
+    elif mode == "2":
+        gui = SudokuUserInputUI()
