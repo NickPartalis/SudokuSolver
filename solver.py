@@ -9,13 +9,13 @@ def is_valid(board, num, row, col):
         if board[i][col] == num:
             return False
 
-    # Check same box
-    box_row = (row // 3) * 3  # Gets the top left coordinates of the box it's in
-    box_col = (col // 3) * 3
+    # Check same square
+    square_row = (row // 3) * 3  # Gets the top left coordinates of the box it's in
+    square_col = (col // 3) * 3
 
     for i in range(3):
         for j in range(3):
-            if board[box_row + i][box_col + j] == num:
+            if board[square_row + i][square_col + j] == num:
                 return False
 
     return True
@@ -42,3 +42,32 @@ def solve(board, puzzle=None, display=False):
                 return False
 
     return True  # Runs when there are no empty slots, so the puzzle is solved
+
+
+def is_solvable(board):
+    """Receives a 9x9 board as a parameter. Returns True if puzzle can be solved, False otherwise."""
+    for row in range(9):
+        for col, num in enumerate(board[row]):
+            if num != 0:
+                # Check row
+                if board[row].count(num) > 1:
+                    print("Same row")
+                    return False
+
+                # Check column
+                for i in range(9):
+                    if board[i][col] == num and i != row:
+                        print("Same column")
+                        return False
+
+                # Check same square
+                square_row = (row // 3) * 3  # Gets the top left coordinates of the box it's in
+                square_col = (col // 3) * 3
+
+                for i in range(3):
+                    for j in range(3):
+                        if board[square_row + i][square_col + j] == num and (square_row+i, square_col+j) != (row, col):
+                            print("Same square")
+                            return False
+
+    return True

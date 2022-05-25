@@ -1,5 +1,7 @@
 from tkinter import *
-from solver import solve
+from tkinter import messagebox
+
+from solver import solve, is_solvable
 
 PADDING = 40
 BOARD_SIZE = 540
@@ -54,13 +56,6 @@ class SudokuUI:
                 btn.grid(row=i % 3, column=j % 3, sticky="nsew")
                 self.button_grid[i].append(btn)
 
-        # Populate the board with initial values
-        for row in range(9):
-            for col in range(9):
-                if 0 < self.board[row][col] < 10:
-                    self.button_grid[row][col].config(text=self.board[row][col], command=None,
-                                                      bg="#e6e6e6", activebackground="#e6e6e6")
-
     def fill_cell(self, row, col, number):
         self.button_grid[row][col].config(text=number, bg="gold")
         self.root.update()
@@ -88,6 +83,16 @@ class SudokuNoInputUI(SudokuUI):
 
         self.root.mainloop()
 
+    def create_board(self):
+        super().create_board()
+
+        # Populate the board with initial values
+        for row in range(9):
+            for col in range(9):
+                if 0 < self.board[row][col] < 10:
+                    self.button_grid[row][col].config(text=self.board[row][col], command=None,
+                                                      bg="#e6e6e6", activebackground="#e6e6e6")
+
 
 class SudokuUserInputUI(SudokuUI):
     def __init__(self):
@@ -97,7 +102,7 @@ class SudokuUserInputUI(SudokuUI):
         self.tracked_button = None
         for row in self.button_grid:
             for btn in row:
-                btn.bind('<Button-1>', self.button_click)
+                btn.bind("<Button-1>", self.button_click)
         self.root.bind_all("<Key>", self.key_press)
 
         self.root.mainloop()
@@ -106,7 +111,7 @@ class SudokuUserInputUI(SudokuUI):
         if self.tracked_button:
             if event.char.isdigit() and event.char != "0":  # 1 - 9
                 key = int(event.char)
-                self.tracked_button.config(text=key)  # TODO bg="#e6e6e6"?
+                self.tracked_button.config(text=key)
             elif event.char == "0" or event.char == "":  # 0 or special characters (for deletion)
                 self.tracked_button.config(text="")
             self.tracked_button.config(bg=CELL_COLOR)
@@ -120,9 +125,16 @@ class SudokuUserInputUI(SudokuUI):
         btn.config(bg="yellow")
 
     def display_solver(self):
-        if solve(self.board, self, display=False):  # if puzzle solvable, then display solution
+        self.root.unbind_all("<Key>")
+        # Add user input into board
+        for row in range(9):
+            for col in range(9):
+                self.button_grid[row][col].unbind("<Button-1>")
+                if self.button_grid[row][col]["text"] and 1 <= self.button_grid[row][col]["text"] <= 9:
+                    self.button_grid[row][col].config(bg="#e6e6e6", activebackground="#e6e6e6")
+                    self.board[row][col] = int(self.button_grid[row][col]["text"])
+
+        if is_solvable(self.board):  # if puzzle solvable, then display solution
             solve(self.board, self, display=True)
-            print(self.board)
-            print("Done!")
         else:
-            print("Puzzle not solvable.")
+            messagebox.showerror(title="Unsolvable Puzzle", message="The puzzle you provided cannot be solved!")
