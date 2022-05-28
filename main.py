@@ -1,22 +1,8 @@
 from pprint import pprint
-import requests
-from gui import SudokuNoInputUI, SudokuUserInputUI
+from gui import SudokuNoInputUI, SudokuUserInputUI, MainMenu
 from solver import solve
 
-def generate_puzzle(difficulty):
-    if difficulty not in ("easy", "medium", "hard"):
-        difficulty = "random"
-
-    # Sugoku API from Roberto Ortega (https://github.com/bertoort)
-    url = "https://sugoku.herokuapp.com/board"
-    params = {"difficulty": difficulty}
-
-    response = requests.request("GET", url, params=params)
-    return response.json()["board"]
-
-
 if __name__ == '__main__':
-    board = generate_puzzle("random")
 
     # board = [
     #     [3, 9, 0,   0, 5, 0,   0, 0, 0],
@@ -37,8 +23,11 @@ if __name__ == '__main__':
     # print(solve(board))
     # pprint(board)
 
-    mode = input("Choose mode 1 or 2: ")
-    if mode == "1":
-        gui = SudokuNoInputUI(board)
-    elif mode == "2":
-        gui = SudokuUserInputUI()
+    # mode = input("Choose mode 1 or 2: ")
+    # if mode == "1":
+    #     board = generate_puzzle("random")
+    #     gui = SudokuNoInputUI(board)
+    # elif mode == "2":
+    #     gui = SudokuUserInputUI()
+
+    gui = MainMenu()
