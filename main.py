@@ -1,5 +1,5 @@
 from pprint import pprint
-from gui import SudokuNoInputUI, SudokuUserInputUI, MainMenu
+from gui import SudokuRandomPuzzleUI, SudokuUserPuzzleUI, MainMenu
 from solver import solve
 
 if __name__ == '__main__':
@@ -22,12 +22,5 @@ if __name__ == '__main__':
     # print("    ")
     # print(solve(board))
     # pprint(board)
-
-    # mode = input("Choose mode 1 or 2: ")
-    # if mode == "1":
-    #     board = generate_puzzle("random")
-    #     gui = SudokuNoInputUI(board)
-    # elif mode == "2":
-    #     gui = SudokuUserInputUI()
 
     gui = MainMenu()

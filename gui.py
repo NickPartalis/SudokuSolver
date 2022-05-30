@@ -7,8 +7,7 @@ PADDING = 40
 BOARD_SIZE = 540
 CELL_SIZE = BOARD_SIZE // 9
 CELL_COLOR = "white"
-FONT = ("Trebuchet", 20)
-SPEED_MS = 1
+FONT = "Trebuchet"
 DIFFICULTY = {"Easy": "easy",
               "Medium": "medium",
               "Hard": "hard"}
@@ -21,25 +20,16 @@ class MainMenu:
         self.root.resizable(False, False)
         self.root.title("Sudoku Solver")
 
-        bg = PhotoImage(file="assets/sudoku_bg2.png")
+        bg = PhotoImage(file="assets/sudoku_bg.png")
         self.canvas1 = Canvas(self.root)
         self.canvas1.pack(fill="both", expand=True)
         self.canvas1.create_image(0, 0, image=bg, anchor="nw")
 
-        self.canvas1.create_text(300, 120, text="SudokuSolver", font=("Trebuchet", 28, "bold"))
+        self.canvas1.create_text(300, 120, text="SudokuSolver", font=(FONT, 28, "bold"))
 
-        # btn_frame = Frame(master=self.canvas1)
-        # btn_frame.place(relx=0.5, rely=0.5, anchor=CENTER)
-        # mode1_btn = Button(master=btn_frame, text="Get a random puzzle", font=("Trebuchet", 14), command=self.get_random_puzzle)
-        # mode2_btn = Button(master=btn_frame, text="Input your own puzzle", font=("Trebuchet", 14), command=self.input_own_puzzle)
-        # exit_btn = Button(master=btn_frame, text="Exit", font=("Trebuchet", 14), command=self.root.quit)
-        # mode1_btn.pack(pady=10)
-        # mode2_btn.pack(pady=10)
-        # exit_btn.pack(pady=10)
-
-        mode1_btn = Button(width=18, text="Get a random puzzle", font=("Trebuchet", 14), command=self.get_random_puzzle)
-        mode2_btn = Button(width=18, text="Input your own puzzle", font=("Trebuchet", 14), command=self.input_own_puzzle)
-        exit_btn = Button(text="Exit", font=("Trebuchet", 14), command=self.root.quit)
+        mode1_btn = Button(width=18, text="Get a random puzzle", font=(FONT, 14), command=self.get_random_puzzle)
+        mode2_btn = Button(width=18, text="Input your own puzzle", font=(FONT, 14), command=self.input_own_puzzle)
+        exit_btn = Button(text="Exit", font=(FONT, 14), command=self.root.destroy)
         mode1_btn.place(x=190, y=290)
         mode2_btn.place(x=190, y=345)
         exit_btn.place(x=280, y=400)
@@ -48,35 +38,41 @@ class MainMenu:
 
     @staticmethod
     def get_random_puzzle():
-        SudokuNoInputUI()
+        SudokuRandomPuzzleUI()
 
     @staticmethod
     def input_own_puzzle():
-        SudokuUserInputUI()
+        SudokuUserPuzzleUI()
 
 
 class SudokuUI:
     def __init__(self, board):
         self.board = board
-        self.root = Tk()
+        self.root = Toplevel()
         self.root.title("Sudoku Solver")
         self.root.resizable(False, False)
         self.puzzle = Frame(master=self.root, bg=CELL_COLOR, highlightthickness=1)
-        self.puzzle.pack(padx=PADDING, pady=(PADDING, PADDING//3))
+        self.puzzle.pack(padx=PADDING, pady=(PADDING, PADDING // 3))
+        self.speed_ms = 1
         self.button_grid = []
 
         self.create_board()
 
         menu = Frame(master=self.root)
-        menu.pack(pady=(0, PADDING//3))
-        Button(menu, text="l▶", font=("Helvetica", 10), command=lambda: self.change_speed(40)).grid(row=0, column=0)
-        Button(menu, text="▶", width=2, font=("Helvetica", 10), command=lambda: self.change_speed(1)).grid(row=0, column=1)
-        Button(menu, text="▶▶", font=("Helvetica", 10), command=lambda: self.change_speed(0)).grid(row=0, column=2)
-        self.solve_btn = Button(menu, text="Solve", font=("Helvetica", 12), command=self.display_solver)
+        menu.pack()
+        Button(menu, text="l▶", font=(FONT, 10), command=lambda: self.change_speed(40)).grid(row=0, column=0)
+        Button(menu, text="▶", width=2, font=(FONT, 10), command=lambda: self.change_speed(1)).grid(row=0, column=1)
+        Button(menu, text="▶▶", font=(FONT, 10), command=lambda: self.change_speed(0)).grid(row=0, column=2)
+        self.solve_btn = Button(menu, text="Solve", font=(FONT, 12), command=self.display_solver)
         self.solve_btn.grid(row=1, column=0, columnspan=3, pady=(5, 0), sticky="nsew")
 
+        self.display_check_var = IntVar()
+        self.display_check = Checkbutton(self.root, text="Display algorithm steps", font=(FONT, 11),
+                                         variable=self.display_check_var, onvalue=1, offvalue=0)
+        self.display_check.pack(pady=(0, PADDING // 3))
+        self.display_check.select()
+
     def create_board(self):
-        # Create the board
         frame_list = []
         for i in range(3):
             frame_list.append([])
@@ -90,39 +86,49 @@ class SudokuUI:
         for i in range(9):
             self.button_grid.append([])
             for j in range(9):
-                btn = Button(master=frame_list[i//3][j//3], bd=1, text="", relief=SUNKEN, width=3, height=1,
-                             font=FONT, bg=CELL_COLOR)
+                btn = Button(master=frame_list[i // 3][j // 3], bd=1, text="", relief=SUNKEN, width=3, height=1,
+                             font=(FONT, 20), bg=CELL_COLOR)
                 btn.grid(row=i % 3, column=j % 3, sticky="nsew")
                 self.button_grid[i].append(btn)
 
     def fill_cell(self, row, col, number):
         self.button_grid[row][col].config(text=number, bg="gold")
         self.root.update()
-        self.root.after(ms=SPEED_MS, func=None)
-        self.button_grid[row][col].config(text=number, bg="light blue")
+        self.root.after(ms=self.speed_ms, func=None)
+        self.button_grid[row][col].config(bg="light blue")
         self.root.update()
-        # self.root.after(ms=MS, func=None)
 
     def empty_cell(self, row, col):
         self.button_grid[row][col].config(text="", bg=CELL_COLOR)
-        # self.root.after(ms=SPEED_MS, func=print(row, col))
         self.root.update()
 
     def display_solver(self):
-        solve(self.board, self, display=True)
+        self.solve_btn["state"] = DISABLED
+        self.display_check["state"] = DISABLED
 
-    @staticmethod
-    def change_speed(num):
-        global SPEED_MS
-        SPEED_MS = num
+        if self.display_check_var.get() == 1:
+            solve(self.board, self, display=True)
+        else:
+            solve(self.board, self, display=False)
+            for row in range(9):
+                for col in range(9):
+                    if self.button_grid[row][col]["text"] == "":
+                        self.button_grid[row][col].config(text=self.board[row][col], bg="light blue")
+                        self.root.update()
+                        self.root.after(ms=self.speed_ms, func=None)
+
+        self.solve_btn["state"] = NORMAL
+
+    def change_speed(self, num):
+        self.speed_ms = num
 
 
-class SudokuNoInputUI(SudokuUI):
+class SudokuRandomPuzzleUI(SudokuUI):
     def __init__(self):
         board = self.generate_puzzle("random")
         super().__init__(board)
 
-        self.root.mainloop()
+        # self.root.mainloop()
 
     def create_board(self):
         super().create_board()
@@ -135,10 +141,8 @@ class SudokuNoInputUI(SudokuUI):
                                                       bg="#e6e6e6", activebackground="#e6e6e6")
 
     def display_solver(self):
-        self.solve_btn["state"] = DISABLED
         super().display_solver()
-        self.solve_btn["state"] = NORMAL
-        self.solve_btn.config(text="Get another", command=lambda: [self.root.destroy(), SudokuNoInputUI()])
+        self.solve_btn.config(text="Again", command=lambda: [SudokuRandomPuzzleUI(), self.root.destroy()])
 
     @staticmethod
     def generate_puzzle(difficulty):
@@ -153,9 +157,9 @@ class SudokuNoInputUI(SudokuUI):
         return response.json()["board"]
 
 
-class SudokuUserInputUI(SudokuUI):
+class SudokuUserPuzzleUI(SudokuUI):
     def __init__(self):
-        board = [[0 for col in range(9)] for row in range(9)]
+        board = [[0 for _ in range(9)] for _ in range(9)]
         super().__init__(board)
 
         self.tracked_button = None
@@ -164,7 +168,7 @@ class SudokuUserInputUI(SudokuUI):
                 btn.bind("<Button-1>", self.button_click)
         self.root.bind_all("<Key>", self.key_press)
 
-        self.root.mainloop()
+        # self.root.mainloop()
 
     def key_press(self, event):
         if self.tracked_button:
@@ -184,7 +188,6 @@ class SudokuUserInputUI(SudokuUI):
         btn.config(bg="yellow")
 
     def display_solver(self):
-        self.solve_btn["state"] = DISABLED
         self.root.unbind_all("<Key>")
         # Add user input into board
         for row in range(9):
@@ -195,10 +198,9 @@ class SudokuUserInputUI(SudokuUI):
                     self.board[row][col] = int(self.button_grid[row][col]["text"])
 
         if is_solvable(self.board):  # if puzzle solvable, then display solution
-            solve(self.board, self, display=True)
+            super().display_solver()
         else:
-            messagebox.showerror(title="Unsolvable Puzzle", message="The puzzle you provided cannot be solved!")
+            messagebox.showerror(parent=self.root, title="Unsolvable Puzzle",
+                                 message="The puzzle you provided cannot be solved!")
 
-        self.solve_btn["state"] = NORMAL
-        self.solve_btn.config(text="Get another", command=lambda: [self.root.destroy(), SudokuUserInputUI()])
-
+        self.solve_btn.config(text="Again", command=lambda: [SudokuUserPuzzleUI(), self.root.destroy()])
