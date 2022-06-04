@@ -8,9 +8,6 @@ BOARD_SIZE = 540
 CELL_SIZE = BOARD_SIZE // 9
 CELL_COLOR = "white"
 FONT = "Trebuchet"
-DIFFICULTY = {"Easy": "easy",
-              "Medium": "medium",
-              "Hard": "hard"}
 
 
 class MainMenu:
@@ -19,6 +16,7 @@ class MainMenu:
         self.root.geometry("610x600")
         self.root.resizable(False, False)
         self.root.title("Sudoku Solver")
+        self.root.iconbitmap("assets/favicon.ico")
 
         bg = PhotoImage(file="assets/sudoku_bg.png")
         self.canvas1 = Canvas(self.root)
@@ -27,22 +25,13 @@ class MainMenu:
 
         self.canvas1.create_text(300, 120, text="SudokuSolver", font=(FONT, 28, "bold"))
 
-        mode1_btn = Button(width=18, text="Get a random puzzle", font=(FONT, 14), command=self.get_random_puzzle)
-        mode2_btn = Button(width=18, text="Input your own puzzle", font=(FONT, 14), command=self.input_own_puzzle)
-        exit_btn = Button(text="Exit", font=(FONT, 14), command=self.root.destroy)
-        mode1_btn.place(x=190, y=290)
-        mode2_btn.place(x=190, y=345)
-        exit_btn.place(x=280, y=400)
+        Button(width=18, text="Get a random puzzle", font=(FONT, 14),
+               command=lambda: SudokuRandomPuzzleUI()).place(x=190, y=290)
+        Button(width=18, text="Input your own puzzle", font=(FONT, 14),
+               command=lambda: SudokuUserPuzzleUI()).place(x=190, y=345)
+        Button(text="Exit", font=(FONT, 14), command=self.root.destroy).place(x=280, y=400)
 
         self.root.mainloop()
-
-    @staticmethod
-    def get_random_puzzle():
-        SudokuRandomPuzzleUI()
-
-    @staticmethod
-    def input_own_puzzle():
-        SudokuUserPuzzleUI()
 
 
 class SudokuUI:
@@ -50,6 +39,7 @@ class SudokuUI:
         self.board = board
         self.root = Toplevel()
         self.root.title("Sudoku Solver")
+        self.root.iconbitmap("assets/favicon.ico")
         self.root.resizable(False, False)
         self.puzzle = Frame(master=self.root, bg=CELL_COLOR, highlightthickness=1)
         self.puzzle.pack(padx=PADDING, pady=(PADDING, PADDING // 3))
@@ -92,10 +82,11 @@ class SudokuUI:
                 self.button_grid[i].append(btn)
 
     def fill_cell(self, row, col, number):
-        self.button_grid[row][col].config(text=number, bg="gold")
-        self.root.update()
-        self.root.after(ms=self.speed_ms, func=None)
-        self.button_grid[row][col].config(bg="light blue")
+        if self.speed_ms > 0:
+            self.button_grid[row][col].config(bg="gold")
+            self.root.update()
+            self.root.after(ms=self.speed_ms, func=None)
+        self.button_grid[row][col].config(text=number, bg="light blue")
         self.root.update()
 
     def empty_cell(self, row, col):
@@ -125,10 +116,25 @@ class SudokuUI:
 
 class SudokuRandomPuzzleUI(SudokuUI):
     def __init__(self):
-        board = self.generate_puzzle("random")
-        super().__init__(board)
+        window = Toplevel()
+        window.title("Difficulty")
+        window.geometry("250x200")
+        window.resizable(False, False)
+        window.iconbitmap("assets/favicon.ico")
+        window.wm_attributes("-topmost", 1)
 
-        # self.root.mainloop()
+        Label(master=window, text="Choose difficulty:", font=(FONT, 12)).pack(pady=(10, 5))
+
+        difficulty = StringVar(window, "random")
+        choices = ("Random", "Easy", "Medium", "Hard")
+        for choice in choices:
+            Radiobutton(window, text=choice, value=choice.lower(), variable=difficulty, font=(FONT, 10)).pack()
+
+        get_puzzle_btn = Button(window, text="Get puzzle", font=(FONT, 10))
+        get_puzzle_btn.pack(pady=(5, 0))
+        get_puzzle_btn.bind("<Button-1>", lambda x: [window.destroy(),
+                                                     board := self.generate_puzzle(difficulty),
+                                                     SudokuUI.__init__(self, board)])
 
     def create_board(self):
         super().create_board()
@@ -154,7 +160,22 @@ class SudokuRandomPuzzleUI(SudokuUI):
         params = {"difficulty": difficulty}
 
         response = requests.request("GET", url, params=params)
-        return response.json()["board"]
+        if response.status_code == 200:
+            return response.json()["board"]
+        # if API fails, return dummy data
+        return [
+            [3, 9, 0,   0, 5, 0,   0, 0, 0],
+            [0, 0, 0,   2, 0, 0,   0, 0, 5],
+            [0, 0, 0,   7, 1, 9,   0, 8, 0],
+
+            [0, 5, 0,   0, 6, 8,   0, 0, 0],
+            [2, 0, 6,   0, 0, 3,   0, 0, 0],
+            [0, 0, 0,   0, 0, 0,   0, 0, 4],
+
+            [5, 0, 0,   0, 0, 0,   0, 0, 0],
+            [6, 7, 0,   1, 0, 5,   0, 4, 0],
+            [1, 0, 9,   0, 0, 0,   2, 0, 0]
+        ]
 
 
 class SudokuUserPuzzleUI(SudokuUI):
@@ -167,8 +188,6 @@ class SudokuUserPuzzleUI(SudokuUI):
             for btn in row:
                 btn.bind("<Button-1>", self.button_click)
         self.root.bind_all("<Key>", self.key_press)
-
-        # self.root.mainloop()
 
     def key_press(self, event):
         if self.tracked_button:
